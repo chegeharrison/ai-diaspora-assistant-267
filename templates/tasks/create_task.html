@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}New Request | AI Diaspora Assistant{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Submit a Request</h2>
+    <p>Describe the task you want help with back home.</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            {{ form.customer_request.label_tag }}
+            {{ form.customer_request }}
+        </div>
+
+        <button type="submit" class="btn btn-primary">Create Task</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Task Details | AI Diaspora Assistant{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Task Created Successfully</h2>
+
+    <p><strong>Task Code:</strong> {{ task.task_code }}</p>
+    <p><strong>Intent:</strong> {{ task.get_intent_display }}</p>
+    <p><strong>Status:</strong> {{ task.get_status_display }}</p>
+    <p><strong>Risk Score:</strong> {{ task.risk_score }}</p>
+    <p><strong>Assigned Team:</strong> {{ task.get_employee_assignment_display }}</p>
+    <p><strong>Created At:</strong> {{ task.created_at }}</p>
+
+    <hr>
+
+    <h3>Original Request</h3>
+    <p>{{ task.raw_request }}</p>
+
+    <h3>Extracted Entities</h3>
+    <pre>{{ task.entities }}</pre>
+</div>
+{% endblock %}
