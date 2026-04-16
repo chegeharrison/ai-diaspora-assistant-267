@@ -108,8 +108,8 @@ Rules:
 - Do not invent phone numbers, email addresses, tracking links, or timelines
 - Do not claim a task is completed unless the system explicitly says so
 - Do not say "I will transfer" or act like the assistant personally executes the task
-- Use wording like "we have received", "our team is reviewing", "your request is being processed"
-- If intent is check_status, use the real status provided in the prompt
+- Use wording like "we have received your request", "your request is being processed", or "current status"
+- If intent is check_status, use only the exact status provided
 - Return strict JSON only
 """
 
@@ -263,6 +263,23 @@ def generate_task_messages(
     actual_status: str = "",
     referenced_task_code: str = "",
 ) -> dict:
+    if intent == "check_status":
+        code = referenced_task_code or "Unknown"
+        status_text = actual_status or "Unknown"
+
+        return {
+            "whatsapp": f"Hi! Task {code} is currently {status_text}. We’ll notify you when the status changes.",
+            "email": (
+                f"Dear Customer,\n\n"
+                f"Thank you for checking the status of task {code}.\n"
+                f"Current status: {status_text}.\n\n"
+                f"We will notify you if there are any changes.\n\n"
+                f"Best regards,\n"
+                f"Vunoh Global Customer Support"
+            ),
+            "sms": f"Task {code} status: {status_text}."
+        }
+
     prompt = f"""
 Generate 3 customer messages for this saved task.
 
@@ -274,15 +291,7 @@ Assigned team: {employee_assignment}
 Original request: {raw_request}
 Referenced task code: {referenced_task_code}
 Actual referenced task status: {actual_status}
-
-Rules:
-- If the intent is check_status, use the real referenced task status provided above
-- Do not invent a status
-- Do not invent contact details
-- Do not invent timelines
-- Do not claim that money has already been sent unless the system actually confirms that
 """
 
     raw = _call_groq_json(MESSAGE_SYSTEM_PROMPT, prompt, MESSAGE_SCHEMA)
     return validate_messages(raw)
-
