@@ -10,6 +10,7 @@
     <p><strong>Intent:</strong> {{ task.get_intent_display }}</p>
     <p><strong>Status:</strong> {{ task.get_status_display }}</p>
     <p><strong>Risk Score:</strong> {{ task.risk_score }}</p>
+    <p><strong>Risk Reason:</strong> {{ task.risk_reason }}</p>
     <p><strong>Assigned Team:</strong> {{ task.get_employee_assignment_display }}</p>
     <p><strong>Created At:</strong> {{ task.created_at }}</p>
 
@@ -20,5 +21,43 @@
 
     <h3>Extracted Entities</h3>
     <pre>{{ task.entities }}</pre>
+
+    <h3>Generated Steps</h3>
+    <ol>
+        {% for step in task.steps.all %}
+            <li>{{ step.description }}</li>
+        {% empty %}
+            <li>No steps generated.</li>
+        {% endfor %}
+    </ol>
+
+    <h3>Generated Messages</h3>
+
+    <div class="message-block">
+        <h4>WhatsApp</h4>
+        {% for message in task.messages.all %}
+            {% if message.channel == "whatsapp" %}
+                <pre>{{ message.content }}</pre>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <div class="message-block">
+        <h4>Email</h4>
+        {% for message in task.messages.all %}
+            {% if message.channel == "email" %}
+                <pre>{{ message.content }}</pre>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <div class="message-block">
+        <h4>SMS</h4>
+        {% for message in task.messages.all %}
+            {% if message.channel == "sms" %}
+                <pre>{{ message.content }}</pre>
+            {% endif %}
+        {% endfor %}
+    </div>
 </div>
 {% endblock %}

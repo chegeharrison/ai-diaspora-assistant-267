@@ -1,53 +1,59 @@
-import re
+from django.conf import settings
+import json
+import requests
 
 
-def extract_intent_and_entities(user_text: str) -> dict:
-    text = user_text.lower()
+def analyze_customer_request(user_text: str) -> dict:
+    api_key = settings.LLM_API_KEY.strip()
+    api_url = settings.LLM_API_URL.strip()
+    model = settings.LLM_MODEL.strip()
 
-    result = {
-        "intent": "check_status",
-        "entities": {},
+    if not api_key or not api_url or not model:
+        raise RuntimeError("Missing LLM configuration in Django settings")
+
+    payload = {
+        "model": model,
+        "messages": [
+            {
+                "role": "system",
+                "content": """Return strict JSON only in this format:
+{
+  "intent": "verify_document",
+  "entities": {
+    "amount": "",
+    "recipient": "",
+    "location": "",
+    "urgency": "",
+    "document_type": "",
+    "service_type": "",
+    "schedule": "",
+    "task_code": ""
+  },
+  "steps": ["step 1", "step 2"],
+  "messages": {
+    "whatsapp": "",
+    "email": "",
+    "sms": ""
+  }
+}"""
+            },
+            {
+                "role": "user",
+                "content": user_text
+            }
+        ],
+        "temperature": 0,
     }
 
-    if "send" in text and ("kes" in text or "money" in text):
-        result["intent"] = "send_money"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
 
-        amount_match = re.search(r"(kes\s?[\d,]+)", user_text, re.IGNORECASE)
-        if amount_match:
-            result["entities"]["amount"] = amount_match.group(1)
+    response = requests.post(api_url, headers=headers, json=payload, timeout=45)
+    response.raise_for_status()
 
-        if "mother" in text:
-            result["entities"]["recipient"] = "mother"
+    data = response.json()
+    content = data["choices"][0]["message"]["content"]
 
-        if "urgently" in text or "urgent" in text:
-            result["entities"]["urgency"] = "high"
-
-        if "kisumu" in text:
-            result["entities"]["location"] = "Kisumu"
-
-    elif "clean" in text or "cleaner" in text:
-        result["intent"] = "hire_service"
-        result["entities"]["service_type"] = "cleaning"
-
-        if "westlands" in text:
-            result["entities"]["location"] = "Westlands"
-
-        if "friday" in text:
-            result["entities"]["schedule"] = "Friday"
-
-    elif "verify" in text and ("title" in text or "certificate" in text or "id" in text):
-        result["intent"] = "verify_document"
-
-        if "title" in text:
-            result["entities"]["document_type"] = "land title"
-
-        if "karen" in text:
-            result["entities"]["location"] = "Karen"
-
-    elif "airport" in text or "pickup" in text or "transfer" in text:
-        result["intent"] = "get_airport_transfer"
-
-    elif "status" in text or "track" in text or "follow up" in text:
-        result["intent"] = "check_status"
-
-    return result
+    return json.loads(content)

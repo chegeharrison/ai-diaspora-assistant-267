@@ -9,8 +9,12 @@ def create_task_view(request):
         form = CustomerRequestForm(request.POST)
         if form.is_valid():
             raw_request = form.cleaned_data["customer_request"]
-            task = create_task_from_request(raw_request)
-            return redirect("task_detail", task_id=task.id)
+
+            try:
+                task = create_task_from_request(raw_request)
+                return redirect("task_detail", task_id=task.id)
+            except Exception:
+                form.add_error(None, "We could not process your request right now. Please try again.")
     else:
         form = CustomerRequestForm()
 

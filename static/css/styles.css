@@ -136,3 +136,10 @@ body {
   outline: none;
   border-color: var(--primary);
 }
+.message-block {
+  margin-bottom: 20px;
+}
+
+.message-block h4 {
+  margin-bottom: 8px;
+}
