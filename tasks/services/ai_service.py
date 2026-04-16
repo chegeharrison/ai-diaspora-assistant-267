@@ -174,6 +174,15 @@ def clean_steps(steps: list[str]) -> list[str]:
 
     return good_steps
 
+def normalize_blank(value):
+    if value is None:
+        return ""
+    text = str(value).strip()
+    if text.lower() in {"n/a", "na", "none", "null", "not provided"}:
+        return ""
+    return text
+
+
 def validate_analysis_result(data: dict) -> dict:
     intent = normalize_intent(data.get("intent", ""))
 
@@ -182,14 +191,14 @@ def validate_analysis_result(data: dict) -> dict:
 
     entities = data.get("entities", {}) or {}
     normalized_entities = {
-        "amount": entities.get("amount", "") or "",
-        "recipient": entities.get("recipient", "") or "",
-        "location": entities.get("location", "") or "",
-        "urgency": entities.get("urgency", "") or "",
-        "document_type": entities.get("document_type", "") or "",
-        "service_type": entities.get("service_type", "") or "",
-        "schedule": entities.get("schedule", "") or "",
-        "task_code": entities.get("task_code", "") or "",
+        "amount": normalize_blank(entities.get("amount", "")),
+        "recipient": normalize_blank(entities.get("recipient", "")),
+        "location": normalize_blank(entities.get("location", "")),
+        "urgency": normalize_blank(entities.get("urgency", "")),
+        "document_type": normalize_blank(entities.get("document_type", "")),
+        "service_type": normalize_blank(entities.get("service_type", "")),
+        "schedule": normalize_blank(entities.get("schedule", "")),
+        "task_code": normalize_blank(entities.get("task_code", "")),
     }
 
     steps = clean_steps(data.get("steps", []))
@@ -215,6 +224,17 @@ def validate_messages(data: dict) -> dict:
         raise ValueError("SMS message is empty")
     if len(sms) > 160:
         raise ValueError("SMS exceeds 160 characters")
+
+    banned_phrases = [
+        "call 1-800",
+        "@company.com",
+        "tracking link",
+    ]
+
+    combined = f"{whatsapp} {email} {sms}".lower()
+    for phrase in banned_phrases:
+        if phrase in combined:
+            raise ValueError("Generated message contains invented contact details or unsupported claims")
 
     return {
         "whatsapp": whatsapp,
@@ -266,33 +286,3 @@ Rules:
     raw = _call_groq_json(MESSAGE_SYSTEM_PROMPT, prompt, MESSAGE_SCHEMA)
     return validate_messages(raw)
 
-def validate_messages(data: dict) -> dict:
-    whatsapp = (data.get("whatsapp", "") or "").strip()
-    email = (data.get("email", "") or "").strip()
-    sms = (data.get("sms", "") or "").strip()
-
-    if not whatsapp:
-        raise ValueError("WhatsApp message is empty")
-    if not email:
-        raise ValueError("Email message is empty")
-    if not sms:
-        raise ValueError("SMS message is empty")
-    if len(sms) > 160:
-        raise ValueError("SMS exceeds 160 characters")
-
-    banned_phrases = [
-        "call 1-800",
-        "@company.com",
-        "tracking link",
-    ]
-
-    combined = f"{whatsapp} {email} {sms}".lower()
-    for phrase in banned_phrases:
-        if phrase in combined:
-            raise ValueError("Generated message contains invented contact details or unsupported claims")
-
-    return {
-        "whatsapp": whatsapp,
-        "email": email,
-        "sms": sms,
-    }
