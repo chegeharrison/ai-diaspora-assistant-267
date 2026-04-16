@@ -143,3 +143,26 @@ body {
 .message-block h4 {
   margin-bottom: 8px;
 }
+.task-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.task-table th,
+.task-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+  vertical-align: top;
+}
+
+.task-table th {
+  background: #f8fafc;
+}
+
+.status-select {
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+}
