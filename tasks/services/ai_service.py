@@ -2,8 +2,115 @@ from django.conf import settings
 import json
 import requests
 
+VALID_INTENTS = {
+    "send_money",
+    "get_airport_transfer",
+    "hire_service",
+    "verify_document",
+    "check_status",
+}
 
-def analyze_customer_request(user_text: str) -> dict:
+INTENT_ALIASES = {
+    "schedule_service": "hire_service",
+    "airport_pickup": "get_airport_transfer",
+    "airport_transfer": "get_airport_transfer",
+    "money_transfer": "send_money",
+    "status_check": "check_status",
+    "document_verification": "verify_document",
+}
+
+ANALYSIS_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "intent": {"type": "string"},
+        "entities": {
+            "type": "object",
+            "properties": {
+                "amount": {"type": "string"},
+                "recipient": {"type": "string"},
+                "location": {"type": "string"},
+                "urgency": {"type": "string"},
+                "document_type": {"type": "string"},
+                "service_type": {"type": "string"},
+                "schedule": {"type": "string"},
+                "task_code": {"type": "string"},
+            },
+            "required": [
+                "amount",
+                "recipient",
+                "location",
+                "urgency",
+                "document_type",
+                "service_type",
+                "schedule",
+                "task_code",
+            ],
+            "additionalProperties": False,
+        },
+        "steps": {
+            "type": "array",
+            "items": {"type": "string"},
+            "minItems": 3,
+        },
+    },
+    "required": ["intent", "entities", "steps"],
+    "additionalProperties": False,
+}
+
+MESSAGE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "whatsapp": {"type": "string"},
+        "email": {"type": "string"},
+        "sms": {"type": "string"},
+    },
+    "required": ["whatsapp", "email", "sms"],
+    "additionalProperties": False,
+}
+
+ANALYSIS_SYSTEM_PROMPT = """
+You are an AI operations assistant for a diaspora support platform serving Kenyans living abroad.
+
+Classify the request into ONE valid intent only:
+- send_money
+- get_airport_transfer
+- hire_service
+- verify_document
+- check_status
+
+Rules:
+- send_money = sending money, amounts, recipients, bills, emergency support
+- get_airport_transfer = airport pickup, drop-off, JKIA pickup, landing time
+- hire_service = cleaners, lawyers, errand runners, local service providers
+- verify_document = land titles, title deeds, IDs, certificates, agreements
+- check_status = asking for the status of an existing task code
+
+Return:
+- one valid intent only
+- entities
+- at least 3 specific steps
+- no fake intents
+- no placeholder steps like "step 1"
+
+Return strict JSON only.
+"""
+
+MESSAGE_SYSTEM_PROMPT = """
+You are an AI customer communications assistant.
+
+Generate 3 messages for a saved task:
+- whatsapp: conversational and short
+- email: formal and detailed
+- sms: under 160 characters
+
+Rules:
+- all 3 messages must be filled
+- include the task code in email and sms
+- do not simply repeat the original request
+- return strict JSON only
+"""
+
+def _call_groq_json(system_prompt: str, user_prompt: str, schema: dict) -> dict:
     api_key = settings.LLM_API_KEY.strip()
     api_url = settings.LLM_API_URL.strip()
     model = settings.LLM_MODEL.strip()
@@ -14,35 +121,18 @@ def analyze_customer_request(user_text: str) -> dict:
     payload = {
         "model": model,
         "messages": [
-            {
-                "role": "system",
-                "content": """Return strict JSON only in this format:
-{
-  "intent": "verify_document",
-  "entities": {
-    "amount": "",
-    "recipient": "",
-    "location": "",
-    "urgency": "",
-    "document_type": "",
-    "service_type": "",
-    "schedule": "",
-    "task_code": ""
-  },
-  "steps": ["step 1", "step 2"],
-  "messages": {
-    "whatsapp": "",
-    "email": "",
-    "sms": ""
-  }
-}"""
-            },
-            {
-                "role": "user",
-                "content": user_text
-            }
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
         ],
         "temperature": 0,
+        "response_format": {
+            "type": "json_schema",
+            "json_schema": {
+                "name": "diaspora_output",
+                "strict": True,
+                "schema": schema,
+            },
+        },
     }
 
     headers = {
@@ -55,5 +145,102 @@ def analyze_customer_request(user_text: str) -> dict:
 
     data = response.json()
     content = data["choices"][0]["message"]["content"]
-
     return json.loads(content)
+
+def normalize_intent(intent: str) -> str:
+    cleaned = (intent or "").strip().lower()
+    if cleaned in VALID_INTENTS:
+        return cleaned
+    return INTENT_ALIASES.get(cleaned, cleaned)
+
+def clean_steps(steps: list[str]) -> list[str]:
+    good_steps = []
+
+    for step in steps:
+        text = (step or "").strip()
+        lower = text.lower()
+
+        if not text:
+            continue
+        if lower in {"step 1", "step 2", "step 3"}:
+            continue
+        if lower.startswith("step ") and len(text) <= 10:
+            continue
+
+        good_steps.append(text)
+
+    return good_steps
+
+def validate_analysis_result(data: dict) -> dict:
+    intent = normalize_intent(data.get("intent", ""))
+
+    if intent not in VALID_INTENTS:
+        raise ValueError(f"Invalid intent returned by AI: {intent}")
+
+    entities = data.get("entities", {}) or {}
+    normalized_entities = {
+        "amount": entities.get("amount", "") or "",
+        "recipient": entities.get("recipient", "") or "",
+        "location": entities.get("location", "") or "",
+        "urgency": entities.get("urgency", "") or "",
+        "document_type": entities.get("document_type", "") or "",
+        "service_type": entities.get("service_type", "") or "",
+        "schedule": entities.get("schedule", "") or "",
+        "task_code": entities.get("task_code", "") or "",
+    }
+
+    steps = clean_steps(data.get("steps", []))
+    if len(steps) < 3:
+        raise ValueError("AI returned fewer than 3 valid steps")
+
+    return {
+        "intent": intent,
+        "entities": normalized_entities,
+        "steps": steps,
+    }
+
+def validate_messages(data: dict) -> dict:
+    whatsapp = (data.get("whatsapp", "") or "").strip()
+    email = (data.get("email", "") or "").strip()
+    sms = (data.get("sms", "") or "").strip()
+
+    if not whatsapp:
+        raise ValueError("WhatsApp message is empty")
+    if not email:
+        raise ValueError("Email message is empty")
+    if not sms:
+        raise ValueError("SMS message is empty")
+    if len(sms) > 160:
+        raise ValueError("SMS exceeds 160 characters")
+
+    return {
+        "whatsapp": whatsapp,
+        "email": email,
+        "sms": sms,
+    }
+
+def analyze_customer_request(user_text: str) -> dict:
+    prompt = f"""
+Analyze this request and return structured task data.
+
+Customer request:
+{user_text}
+"""
+
+    raw = _call_groq_json(ANALYSIS_SYSTEM_PROMPT, prompt, ANALYSIS_SCHEMA)
+    return validate_analysis_result(raw)
+
+def generate_task_messages(raw_request: str, task_code: str, intent: str, entities: dict, risk_score: int, employee_assignment: str) -> dict:
+    prompt = f"""
+Generate 3 customer messages for this saved task.
+
+Task code: {task_code}
+Intent: {intent}
+Entities: {json.dumps(entities)}
+Risk score: {risk_score}
+Assigned team: {employee_assignment}
+Original request: {raw_request}
+"""
+
+    raw = _call_groq_json(MESSAGE_SYSTEM_PROMPT, prompt, MESSAGE_SCHEMA)
+    return validate_messages(raw)
