@@ -24,6 +24,16 @@
 
     <h3>Generated Steps</h3>
     <ol>
+        {% if task.intent == "check_status" %}
+            <h3>Referenced Task Status</h3>
+            {% if referenced_task %}
+                <p><strong>Task Code:</strong> {{ referenced_task.task_code }}</p>
+                <p><strong>Current Status:</strong> {{ referenced_task.get_status_display }}</p>
+                <p><strong>Assigned Team:</strong> {{ referenced_task.get_employee_assignment_display }}</p>
+            {% else %}
+                <p>No matching task was found for the provided task code.</p>
+            {% endif %}
+        {% endif %}
         {% for step in task.steps.all %}
             <li>{{ step.description }}</li>
         {% empty %}

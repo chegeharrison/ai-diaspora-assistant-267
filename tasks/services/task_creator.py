@@ -3,12 +3,25 @@ from .ai_service import analyze_customer_request, generate_task_messages
 from .risk_service import calculate_risk
 from .assignment_service import assign_employee_team
 
+
 def create_task_from_request(raw_request: str) -> Task:
     ai_result = analyze_customer_request(raw_request)
 
     intent = ai_result["intent"]
     entities = ai_result["entities"]
     steps = ai_result["steps"]
+
+    referenced_task = None
+    actual_status = ""
+
+    if intent == "check_status":
+        requested_code = (entities.get("task_code") or "").strip()
+        if requested_code:
+            referenced_task = Task.objects.filter(task_code=requested_code).first()
+            if referenced_task:
+                actual_status = referenced_task.get_status_display()
+            else:
+                actual_status = "Task not found"
 
     risk_score, risk_reason = calculate_risk(intent, entities)
     employee_assignment = assign_employee_team(intent)
@@ -43,6 +56,8 @@ def create_task_from_request(raw_request: str) -> Task:
         entities=task.entities,
         risk_score=task.risk_score,
         employee_assignment=task.employee_assignment,
+        actual_status=actual_status,
+        referenced_task_code=(entities.get("task_code") or ""),
     )
 
     for channel, content in messages.items():

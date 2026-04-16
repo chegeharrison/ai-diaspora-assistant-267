@@ -23,4 +23,18 @@ def create_task_view(request):
 
 def task_detail_view(request, task_id):
     task = get_object_or_404(Task, id=task_id)
-    return render(request, "tasks/detail.html", {"task": task})
+
+    referenced_task = None
+    if task.intent == "check_status":
+        requested_code = (task.entities.get("task_code") or "").strip()
+        if requested_code:
+            referenced_task = Task.objects.filter(task_code=requested_code).first()
+
+    return render(
+        request,
+        "tasks/detail.html",
+        {
+            "task": task,
+            "referenced_task": referenced_task,
+        },
+    )

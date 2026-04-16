@@ -230,7 +230,16 @@ Customer request:
     raw = _call_groq_json(ANALYSIS_SYSTEM_PROMPT, prompt, ANALYSIS_SCHEMA)
     return validate_analysis_result(raw)
 
-def generate_task_messages(raw_request: str, task_code: str, intent: str, entities: dict, risk_score: int, employee_assignment: str) -> dict:
+def generate_task_messages(
+    raw_request: str,
+    task_code: str,
+    intent: str,
+    entities: dict,
+    risk_score: int,
+    employee_assignment: str,
+    actual_status: str = "",
+    referenced_task_code: str = "",
+) -> dict:
     prompt = f"""
 Generate 3 customer messages for this saved task.
 
@@ -240,6 +249,15 @@ Entities: {json.dumps(entities)}
 Risk score: {risk_score}
 Assigned team: {employee_assignment}
 Original request: {raw_request}
+Referenced task code: {referenced_task_code}
+Actual referenced task status: {actual_status}
+
+Rules:
+- If the intent is check_status, use the real referenced task status provided above
+- Do not invent a status
+- Do not invent contact details
+- Do not invent timelines
+- Do not claim that money has already been sent unless the system actually confirms that
 """
 
     raw = _call_groq_json(MESSAGE_SYSTEM_PROMPT, prompt, MESSAGE_SCHEMA)
