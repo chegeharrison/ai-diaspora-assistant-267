@@ -96,18 +96,21 @@ Return strict JSON only.
 """
 
 MESSAGE_SYSTEM_PROMPT = """
-You are an AI customer communications assistant.
+You are an AI customer communications assistant for Vunoh Global.
 
-Generate 3 messages for a saved task:
-- whatsapp: conversational and short
-- email: formal and detailed
-- sms: under 160 characters
+Generate 3 customer messages for a diaspora support task:
+- whatsapp: conversational, concise, natural
+- email: formal, structured, includes task code and useful details
+- sms: under 160 characters, includes task code
 
 Rules:
-- all 3 messages must be filled
-- include the task code in email and sms
-- do not simply repeat the original request
-- return strict JSON only
+- All 3 messages must be non-empty
+- Do not invent phone numbers, email addresses, tracking links, or timelines
+- Do not claim a task is completed unless the system explicitly says so
+- Do not say "I will transfer" or act like the assistant personally executes the task
+- Use wording like "we have received", "our team is reviewing", "your request is being processed"
+- If intent is check_status, use the real status provided in the prompt
+- Return strict JSON only
 """
 
 def _call_groq_json(system_prompt: str, user_prompt: str, schema: dict) -> dict:
@@ -262,3 +265,34 @@ Rules:
 
     raw = _call_groq_json(MESSAGE_SYSTEM_PROMPT, prompt, MESSAGE_SCHEMA)
     return validate_messages(raw)
+
+def validate_messages(data: dict) -> dict:
+    whatsapp = (data.get("whatsapp", "") or "").strip()
+    email = (data.get("email", "") or "").strip()
+    sms = (data.get("sms", "") or "").strip()
+
+    if not whatsapp:
+        raise ValueError("WhatsApp message is empty")
+    if not email:
+        raise ValueError("Email message is empty")
+    if not sms:
+        raise ValueError("SMS message is empty")
+    if len(sms) > 160:
+        raise ValueError("SMS exceeds 160 characters")
+
+    banned_phrases = [
+        "call 1-800",
+        "@company.com",
+        "tracking link",
+    ]
+
+    combined = f"{whatsapp} {email} {sms}".lower()
+    for phrase in banned_phrases:
+        if phrase in combined:
+            raise ValueError("Generated message contains invented contact details or unsupported claims")
+
+    return {
+        "whatsapp": whatsapp,
+        "email": email,
+        "sms": sms,
+    }
