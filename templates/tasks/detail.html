@@ -12,7 +12,7 @@
     <p><strong>Risk Score:</strong> {{ task.risk_score }}</p>
     <p><strong>Risk Reason:</strong> {{ task.risk_reason }}</p>
     <p><strong>Assigned Team:</strong> {{ task.get_employee_assignment_display }}</p>
-    <p><strong>Created At:</strong> {{ task.created_at }}</p>
+    <p><strong>Created At:</strong> {{ task.created_at|date:"M d, Y H:i" }}</p>
 
     <hr>
 
