@@ -103,6 +103,10 @@ Generate 3 customer messages for a diaspora support task:
 - email: formal, structured, includes task code and useful details
 - sms: under 160 characters, includes task code
 
+Brand rules:
+- Always write the company name exactly as: Vunoh Global
+- Do not write VunoH, VUNOH, or any other variation
+
 Rules:
 - All 3 messages must be non-empty
 - Do not invent phone numbers, email addresses, tracking links, or timelines
@@ -211,10 +215,24 @@ def validate_analysis_result(data: dict) -> dict:
         "steps": steps,
     }
 
+def normalize_brand_name(text: str) -> str:
+    replacements = {
+        "VunoH Global": "Vunoh Global",
+        "VUNOH Global": "Vunoh Global",
+        "VUNOH GLOBAL": "Vunoh Global",
+        "VunoH": "Vunoh",
+    }
+
+    cleaned = text
+    for wrong, correct in replacements.items():
+        cleaned = cleaned.replace(wrong, correct)
+
+    return cleaned
+
 def validate_messages(data: dict) -> dict:
-    whatsapp = (data.get("whatsapp", "") or "").strip()
-    email = (data.get("email", "") or "").strip()
-    sms = (data.get("sms", "") or "").strip()
+    whatsapp = normalize_brand_name((data.get("whatsapp", "") or "").strip())
+    email = normalize_brand_name((data.get("email", "") or "").strip())
+    sms = normalize_brand_name((data.get("sms", "") or "").strip())
 
     if not whatsapp:
         raise ValueError("WhatsApp message is empty")
