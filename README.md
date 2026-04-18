@@ -24,14 +24,14 @@ The goal was to build something that works end to end, is explainable, and shows
 
 ## Features
 
-### 1. Plain-English Request Input
+#### 1. Plain-English Request Input
 Users can type requests in natural language, for example:
 
 - `I need to send KES 15,000 to my mother in Kisumu urgently.`
 - `Please verify my land title deed for the plot in Karen.`
 - `Can someone clean my apartment in Westlands on Friday?`
 
-### 2. AI Intent Extraction
+#### 2. AI Intent Extraction
 The app uses an LLM to identify a valid intent and extract entities as structured JSON.
 
 Supported intents:
@@ -53,7 +53,7 @@ Example extracted entities include:
 - schedule
 - task code
 
-### 3. Risk Scoring
+#### 3. Risk Scoring
 Each task is assigned a risk score using backend rules based on the extracted details.
 
 Examples:
@@ -62,7 +62,7 @@ Examples:
 - land/title document verification is higher risk than ordinary errands
 - status checks are low risk
 
-### 4. Task Creation
+#### 4. Task Creation
 Each request creates a database task with:
 
 - unique task code
@@ -75,17 +75,17 @@ Each request creates a database task with:
 - status
 - timestamps
 
-### 5. Step Generation
+#### 5. Step Generation
 The app generates task-specific fulfilment steps.
 
-### 6. Three-Format Message Generation
+#### 6. Three-Format Message Generation
 Each task generates and stores:
 
 - WhatsApp message
 - Email message
 - SMS message
 
-### 7. Employee Assignment
+#### 7. Employee Assignment
 Tasks are assigned to an employee category based on intent:
 
 - Finance Team
@@ -93,7 +93,7 @@ Tasks are assigned to an employee category based on intent:
 - Legal Team
 - Customer Support
 
-### 8. Task Dashboard
+#### 8. Task Dashboard
 The dashboard displays:
 
 - task code
@@ -105,26 +105,27 @@ The dashboard displays:
 
 It also allows live status updates, which are saved immediately.
 
-### 9. Status History
+#### 9. Status History
 Every status change is stored in a `StatusHistory` table to preserve an audit trail.
 
 ---
 
 ## Tech Stack
 
-### Backend
+#### Backend
 - Django
 
-### Frontend
+#### Frontend
 - HTML
 - CSS
 - Vanilla JavaScript
 
-### Database
+#### Database
 - SQLite
 
-### AI Provider
+#### AI Provider
 - Groq API
+  Groq provides an OpenAI-compatible API pattern, which made it easier to integrate structured LLM calls into a Python/Django backend.
 
 ---
 
@@ -159,32 +160,32 @@ ai-diaspora-assistant-267/
 ```
 
 ## Setup Instructions
-### 1. Clone the repository
+#### 1. Clone the repository
 ```bash
 git clone https://github.com/chegeharrison/ai-diaspora-assistant-267
 cd ai-diaspora-assistant-267
 ```
 
-### 2. Create and activate a virtual environment
+#### 2. Create and activate a virtual environment
 ```bash
 python3 -m venv venv
 source venv/bin/activate
 ```
-### 3. Install dependencies
+#### 3. Install dependencies
 ```bash
 pip install -r requirements.txt
 ```
-### 4. Create the .env file
+#### 4. Create the .env file
 Create a .env file in the project root and add the environment variables shown below.
-### 5. Run migrations
+#### 5. Run migrations
 ```bash
 python manage.py migrate
 ```
-### 6. Create a superuser
+#### 6. Create a superuser
 ```bash
 python manage.py createsuperuser
 ```
-### 7. Start the development server
+#### 7. Start the development server
 ```bash
 python manage.py runserver
 ```
@@ -192,7 +193,7 @@ Then open:
 ```bash
 http://127.0.0.1:8000/
 ```
-### 8. Environment Variables
+#### 8. Environment Variables
 ```bash
 SECRET_KEY=your_django_secret_key
 DEBUG=True
@@ -207,7 +208,7 @@ LLM_API_URL=https://api.groq.com/openai/v1/chat/completions
 LLM_MODEL=openai/gpt-oss-20b
 ```
 
-### 9. Database and SQL Dump
+#### 9. Database and SQL Dump
 
 This project uses SQLite for local development.
 
@@ -234,18 +235,18 @@ The SQL dump is included to meet the test requirement of having a committed data
 
 ---
 
-# How the Application Works
+## How the Application Works
 
-## Step 1: Customer Submits a Request
+#### Step 1: Customer Submits a Request
 The user enters a request in plain English.
 
-## Step 2: AI Analyzes the Request
+#### Step 2: AI Analyzes the Request
 The first AI call extracts:
 - Intent  
 - Entities  
 - Fulfilment steps  
 
-## Step 3: Backend Validates AI Output
+#### Step 3: Backend Validates AI Output
 The backend:
 - Validates intent  
 - Normalizes unsupported aliases  
@@ -253,16 +254,16 @@ The backend:
 - Ensures steps are meaningful  
 - Rejects incomplete or invalid outputs  
 
-## Step 4: Risk Calculation
+#### Step 4: Risk Calculation
 A deterministic risk score and reason are calculated.
 
-## Step 5: Task Creation
+#### Step 5: Task Creation
 The system:
 - Saves the task  
 - Generates a unique task code  
 - Assigns a default status  
 
-## Step 6: Customer Messages Generation
+#### Step 6: Customer Messages Generation
 A second AI call generates:
 - WhatsApp message  
 - Email message  
@@ -270,7 +271,7 @@ A second AI call generates:
 
 This second step uses the real saved task code so the messages feel more useful and realistic.
 
-## Step 7: Dashboard Tracking
+#### Step 7: Dashboard Tracking
 Tasks appear in a dashboard where status can be updated:
 
 - Pending  
@@ -281,9 +282,9 @@ Each status change is saved immediately and recorded in status history.
 
 ---
 
-# Data Model
+## Data Model
 
-## Task
+#### Task
 Stores the main task data:
 - Task code  
 - Raw request  
@@ -296,35 +297,35 @@ Stores the main task data:
 - Created at  
 - Updated at  
 
-## TaskStep
+#### TaskStep
 Stores fulfilment steps linked to a task.
 
-## TaskMessage
+#### TaskMessage
 Stores messages per channel:
 - WhatsApp  
 - Email  
 - SMS  
 
-## StatusHistory
+#### StatusHistory
 Tracks every status change.
 
 ---
 
-# Key Design Decisions
+## Key Design Decisions
 
-## Why Django
+#### Why Django
 I used Django because the brief explicitly preferred Django, and it gave me a strong foundation out of the box. It provided routing, ORM, migrations, templates, and the admin interface, which helped me move quickly while keeping the project structured and explainable.
 
-## Why SQLite
+#### Why SQLite
 I used SQLite because it is lightweight and easy to set up, which made it a practical choice for a timed take-home project. It also made it easy to generate the required SQL dump for submission. 
 
-## Why Django Templates + Vanilla JavaScript
+#### Why Django Templates + Vanilla JavaScript
 The brief allowed only HTML, CSS, and vanilla JavaScript on the frontend, so I used Django templates for page rendering and vanilla JavaScript only where needed for interactivity, especially for live dashboard status updates. 
 
-## Why `base.html`
+#### Why `base.html`
 I created base.html so that all pages could inherit the same layout, navigation, and stylesheet loading. This reduced repeated code and kept the frontend consistent and easier to maintain.
 
-## Why I created a `services` folder inside the tasks app
+#### Why I created a `services` folder inside the tasks app
 I created a services folder to keep the business logic separate from views and models. This made the code cleaner, easier to debug, and easier to explain. 
 
 
@@ -357,6 +358,8 @@ This file orchestrates the main workflow:
 - Status history creation  
 Separated this flow because it became the central orchestration point of the application.
 
+---
+
 ## Design Choices
 
 #### Why I used a JSON field for entities
@@ -371,32 +374,31 @@ Examples:
 A JSON field gave me flexibility without forcing too many rigid columns into the schema.
 
 #### Why I split AI analysis and message generation into two AI calls
-Instead of one:
+At first, I tried generating everything in one AI call. Later I changed the design.
 
-1. Extract intent, entities, steps  
-2. Save task and generate task code  
-3. Generate messages using real task data  
+The final flow became:
 
-This improves realism and accuracy.
+1. First AI call for intent, entities, and steps 
+2. Save the task and generate the real task code
+3. Second AI call for the customer-facing messages
 
-## Backend Validation
-Added because AI output can be unreliable.
+Made this decision because the messages needed the actual task code and saved task context to feel realistic.
+
+#### Why I added backend validation on AI output
+The model sometimes returned unsupported intent names, blank messages, or poor placeholder steps. I added backend validation to make the stored data more reliable.
 
 Validation includes:
-- Intent normalization  
+- Intent normalization  aliases like `schedule_service`
 - Rejecting invalid intents  
 - Minimum 3 meaningful steps  
 - All 3 messages required  
-- Cleaning placeholders (`N/A`, `None`, `null`)  
+- Converting values like (`N/A`, `None`, `null`) into empty strings
 
-## Backend Risk Scoring
-Kept in Python to ensure:
-- Deterministic behavior  
-- Explainability  
-- Real-world relevance  
+#### Why I kept risk scoring in backend Python
+I deliberately kept risk scoring in backend logic instead of leaving it entirely to the AI. I did this because the risk rules needed to be deterministic, explainable, and grounded in real diaspora scenarios.
 
-## Risk Logic Design
-Reflects real scenarios:
+#### Why I designed the risk logic the way I did
+The risk logic was built to reflect realistic concerns, for example:
 
 - Money transfer → financial & fraud risk  
 - Large amounts → higher risk  
@@ -406,41 +408,42 @@ Reflects real scenarios:
 - Hiring → coordination risk  
 - Status checks → low risk  
 
-## Database-Backed Status Checks
-Instead of AI guessing:
+#### Why I used database-backed status lookup for check_status
+At first, the model tried to generate status updates by itself, which caused hallucinated answers.
+
+I changed that design so that:
 - AI extracts task code  
 - Backend retrieves actual task  
-- Status is sourced from database  
+- The saved task status is used in the UI and messages
 
-Improves trust and accuracy.
-
-## No Document Upload
-Excluded because:
-- Not required in the brief  
-- Keeps scope focused  
+This made the tracking feature more trustworthy.
 
 ---
 
-# Prompt Design
 
-## Included
+## Prompt Design
+I designed the prompts to return structured, parseable results rather than conversational free text.
+
+#### Included
 - Valid intent list  
 - Classification rules  
 - Output structure  
 - Step quality requirements  
 - Message formatting rules  
-- Brand consistency  
+- Brand consistency rules
+- Clear structure for AI output
 
-## Excluded
+#### Excluded
 - Unsupported intents  
-- Vague responses  
-- Overly creative outputs  
+- Vague free-form explanations 
+- Unnecessary creative wording
+- Overly open-ended responses
 
-Goal: **Structured, parseable, reliable AI output**
+The goal was to make the AI output dependable enough to validate and save directly.
 
----
 
-# AI Usage
+
+## AI Usage
 
 AI was used for:
 - Prompt design  
@@ -450,69 +453,69 @@ AI was used for:
 - Message wording  
 - Documentation improvement  
 
-Final decisions were manually reviewed.
+I still reviewed and adjusted the final implementation decisions manually
 
 ---
 
-# Overridden AI Decisions
+## Overridden AI Decisions
 
-## Status Checking
-AI initially guessed task progress → replaced with DB lookup.
+#### Decision Where I Overrode the AI - Status Checking
+One important place where I overrode the AI was `check_status`.
+The model initially tried to guess the progress of tasks. I changed the design so that the backend uses the actual saved task from the database instead.
 
-## Intent Normalization
-Unsupported intents (e.g., `schedule_service`) → mapped to valid ones.
+#### Intent Normalization
+I also overrode unsupported intent names such as `schedule_service` by normalizing them into the closest valid system-defined intent.
 
 ---
 
-# Challenges and Fixes
+## Challenges and Fixes
+At one point, the AI integration appeared connected, but the app was still saving weak or incorrect outputs.
 
-## Issues
+##### The main problems were:
 - Incorrect LLM configuration  
 - Overuse of certain intents  
 - Weak AI outputs  
 
-## Fixes
-- Proper environment configuration  
-- Strong validation layer  
-- Improved prompts  
-- Split AI workflow  
-- Database-backed status checks  
+##### Fixes
+- Exposing the required LLM settings properly in Django
+- Validating AI output before saving  
+- Rewriting the system prompt  
+- Splitting analysis and message generation into two AI calls
+- Replacing hallucinated status replies with database-backed status lookups  
 
 ---
 
-# Key Learnings
+## Key Learnings
 
-- AI output must be validated  
+- AI output should not be trusted blindly 
 - Deterministic logic improves reliability  
-- Service-based architecture improves clarity  
-- Strong prompts alone are not enough  
+- Good service separation makes Django applications easier to understand and maintain  
+- Backend validation is necessary even with strong prompting  
 
 ---
 
-# Limitations
+## Limitations
 
-- No authentication  
+- No customer authentication
 - No document upload  
 - No employee database  
 - No payment integration  
-- No external service integrations  
-- No default deployment  
+- No external service integrations, eg transport 
 
 ---
 
-# Future Improvements
+## Future Improvements
 
 - Document upload support  
 - Dashboard filters and search  
 - Customer authentication  
 - Audit logs  
-- Notification systems  
-- Public deployment  
+- Notification systems   
 - Advanced risk analytics  
 
 ---
 
-# Final Submission Notes
+## Final Submission Notes
 
 This repository includes:
 - Source code  
@@ -520,12 +523,9 @@ This repository includes:
 - Structured documentation  
 - SQL dump with schema and sample data  
 
-The SQL dump is committed as required.
 
 ---
-
-# Author
-
+## Author
 Built as part of the **Vunoh Global AI Internship Practical Test**.
 
 
@@ -533,67 +533,10 @@ Built as part of the **Vunoh Global AI Internship Practical Test**.
 
 
 
-## 
 
 
 
 
-## Chunk 1
 
-## Chunk 2### Decision: Build the request-intake and task-creation flow before real AI integration
-I chose to first build a working request submission pipeline that accepts user input, extracts a provisional intent/entities structure, calculates risk, assigns the task, and stores everything in the database. I did this so I could validate the end-to-end application flow before introducing external LLM API complexity. This made debugging easier and ensured the database and business logic were stable before integrating AI-generated outputs.
 
-## Decisions I made and why
 
-### Why I used Django
-I chose Django because the test brief explicitly listed Django as the preferred backend option. It also helped me move faster by providing built-in admin, ORM, routing, migrations, and template rendering.
-
-### Why I used SQLite
-I used SQLite for the build phase because it is lightweight and fast to set up, which was practical for a timed take-home project. It allowed me to focus on application logic first, while still meeting the requirement for database persistence and SQL export later.
-
-### Why I created a shared base template
-I created `base.html` so the pages could reuse a common layout, navigation, and shared styling. This reduced repeated code and made the frontend structure cleaner and easier to maintain.
-
-### Why I separated the logic into service files
-I split the business logic into service files such as `ai_service.py`, `risk_service.py`, `assignment_service.py`, and `task_creator.py`. I did this so that the Django views would stay simple and the logic would be easier to test, debug, and explain.
-
-### Why I used a JSON field for extracted entities
-I stored extracted entities in a JSON field because each intent has a slightly different set of useful details. For example, a money transfer request needs amount and recipient information, while a document verification request needs document type and location. A JSON field gave me flexibility without overcomplicating the schema.
-
-### Why I used Groq
-I chose Groq because it provides an OpenAI-compatible API pattern, which made it easier to integrate structured LLM calls into a Python/Django backend. This let me focus on prompt design, validation, and persistence rather than provider-specific SDK complexity.
-
-### Why I split task analysis and message generation into two AI calls
-I initially generated intent, steps, and messages in one AI call, but I later changed the design. I split the workflow into:
-1. AI analysis for intent, entities, and fulfilment steps
-2. task creation in the database to generate the real task code
-3. a second AI call to generate WhatsApp, Email, and SMS messages using the saved task details
-
-I made this change because the final messages needed the actual task code and task context to feel realistic and useful.
-
-### Why I added backend validation on AI output
-I found that the model could sometimes return unsupported intent names like `schedule_service` or low-quality placeholder steps. To make the output reliable, I added backend validation to:
-- normalize unsupported aliases to the closest valid intent
-- reject invalid intents
-- require at least 3 meaningful steps
-- require non-empty WhatsApp, Email, and SMS messages
-
-This improved consistency and made the saved data more trustworthy.
-
-### Why I kept risk scoring in backend Python instead of leaving it fully to the AI
-I kept the final risk score in backend logic so it would stay deterministic, explainable, and grounded in the Kenyan diaspora context. This was important because the brief specifically asked for risk scoring logic that I could explain clearly.
-
-### Why I used separate models for tasks, steps, messages, and status history
-I created separate related models so the system could persist all required outputs clearly:
-- main task
-- generated fulfilment steps
-- three-format customer messages
-- status change history
-
-This matched the requirement that everything be saved and visible in the application.
-
-### One thing that did not work as expected and how I resolved it
-At first, my LLM integration was silently falling back to generic default responses, which caused requests like airport pickup and money transfer to be misclassified. I debugged this by checking whether Django was correctly loading the Groq environment variables and by surfacing real errors instead of hiding them behind fallback logic. After fixing the configuration and improving the AI validation layer, the intent classification became much more reliable.
-
-### One decision where I overrode what the AI suggested
-In some cases, the LLM returned unsupported intent names such as `schedule_service`, or produced low-quality placeholder steps. Instead of saving that output directly, I added backend validation and normalization rules. For example, I mapped `schedule_service` to `hire_service` and rejected outputs that did not meet the expected structure. I did this to keep the workflow aligned with the test specification.
