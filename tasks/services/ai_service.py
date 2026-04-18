@@ -107,6 +107,10 @@ Brand rules:
 - Always write the company name exactly as: Vunoh Global
 - Do not write VunoH, VUNOH, or any other variation
 
+Email rules:
+- Email must begin with "Dear Customer,"
+- Never address the email to Vunoh Global or Vunoh Global Team
+
 Rules:
 - All 3 messages must be non-empty
 - Do not invent phone numbers, email addresses, tracking links, or timelines
