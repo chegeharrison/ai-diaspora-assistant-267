@@ -1,6 +1,12 @@
 from django.conf import settings
 import json
 import requests
+###Debugimport logging
+
+import logging
+
+logger = logging.getLogger(__name__)
+#end debug
 
 VALID_INTENTS = {
     "send_money",
@@ -151,12 +157,21 @@ def _call_groq_json(system_prompt: str, user_prompt: str, schema: dict) -> dict:
         "Content-Type": "application/json",
     }
 
-    response = requests.post(api_url, headers=headers, json=payload, timeout=45)
-    response.raise_for_status()
+    try:
+        response = requests.post(api_url, headers=headers, json=payload, timeout=45)
+        response.raise_for_status()
 
-    data = response.json()
-    content = data["choices"][0]["message"]["content"]
-    return json.loads(content)
+        data = response.json()
+        content = data["choices"][0]["message"]["content"]
+        return json.loads(content)
+
+    except requests.exceptions.HTTPError:
+        logger.exception("Groq HTTP error. Status=%s Body=%s", response.status_code, response.text[:2000])
+        raise RuntimeError("Groq API returned an HTTP error")
+
+    except Exception:
+        logger.exception("Groq request or JSON parsing failed")
+        raise
 
 def normalize_intent(intent: str) -> str:
     cleaned = (intent or "").strip().lower()

@@ -7,6 +7,11 @@ from django.views.decorators.http import require_POST
 from .models import Task, StatusHistory
 
 # Create your views here.
+import logging
+from django.conf import settings
+
+logger = logging.getLogger(__name__)
+
 def create_task_view(request):
     if request.method == "POST":
         form = CustomerRequestForm(request.POST)
@@ -16,13 +21,16 @@ def create_task_view(request):
             try:
                 task = create_task_from_request(raw_request)
                 return redirect("task_detail", task_id=task.id)
-            except Exception:
-                form.add_error(None, "We could not process your request right now. Please try again.")
+            except Exception as e:
+                logger.exception("Task creation failed")
+                if settings.DEBUG:
+                    form.add_error(None, f"Task creation failed: {e}")
+                else:
+                    form.add_error(None, "We could not process your request right now. Please try again.")
     else:
         form = CustomerRequestForm()
 
     return render(request, "tasks/create_task.html", {"form": form})
-
 
 def task_detail_view(request, task_id):
     task = get_object_or_404(Task, id=task_id)
