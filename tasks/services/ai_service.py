@@ -1,12 +1,8 @@
 from django.conf import settings
 import json
 import requests
-###Debugimport logging
-
 import logging
-
 logger = logging.getLogger(__name__)
-#end debug
 
 VALID_INTENTS = {
     "send_money",

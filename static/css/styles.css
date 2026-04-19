@@ -29,6 +29,25 @@ header .container {
   align-items: center;
 }
 
+.site-title {
+  margin: 0;
+  font-size: 28px;
+}
+
+.site-title a,
+.site-title a:visited,
+.site-title a:hover,
+.site-title a:focus,
+.site-title a:active {
+  color: white;
+  text-decoration: none !important;
+}
+
+.site-title a:hover,
+.site-title a:focus {
+  opacity: 0.95;
+}
+
 nav a {
   color: white;
   text-decoration: none;

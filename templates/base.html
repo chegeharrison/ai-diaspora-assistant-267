@@ -10,15 +10,15 @@
 <body>
     <header>
         <div class="container">
-            <h1>AI Diaspora Assistant</h1>
+            <h1 class="site-title">
+                <a href="{% url 'create_task' %}">AI Diaspora Assistant</a>
+            </h1>
             <nav>
-                <a href="/">Home</a>
                 <a href="{% url 'create_task' %}">New Request</a>
                 <a href="{% url 'task_dashboard' %}">Dashboard</a>
             </nav>
         </div>
     </header>
-
     <main class="container">
         {% if messages %}
             <div class="messages">
