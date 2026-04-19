@@ -6,6 +6,10 @@ It helps Kenyans living abroad submit and track important tasks back home using 
 
 ---
 
+## Live Demo
+Hosted on Render: [AI Diaspora Assistant](https://ai-diaspora-assistant-267.onrender.com)
+
+
 ## Project Overview
 
 Kenyans living abroad often rely on calls, WhatsApp messages, relatives, or word of mouth to manage tasks back home. These channels are often slow, informal, and difficult to track when something goes wrong.
@@ -121,7 +125,8 @@ Every status change is stored in a `StatusHistory` table to preserve an audit tr
 - Vanilla JavaScript
 
 #### Database
-- SQLite
+- SQLite for local development
+- PostgreSQL on Render for production deployment
 
 #### AI Provider
 - Groq API
@@ -193,8 +198,8 @@ Then open:
 ```bash
 http://127.0.0.1:8000/
 ```
-#### 8. Environment Variables
-```bash
+## Environment Variables
+```env
 SECRET_KEY=your_django_secret_key
 DEBUG=True
 ALLOWED_HOSTS=127.0.0.1,localhost
@@ -206,9 +211,57 @@ LLM_PROVIDER=groq
 LLM_API_KEY=your_groq_api_key
 LLM_API_URL=https://api.groq.com/openai/v1/chat/completions
 LLM_MODEL=openai/gpt-oss-20b
-```
 
-#### 9. Database and SQL Dump
+```
+## Deployment
+
+The application is deployed on Render.
+
+#### Production Setup
+The live application uses:
+
+- Render Web Service for the Django app
+- Render PostgreSQL for the production database
+- WhiteNoise for static file serving
+- Gunicorn with Uvicorn worker for the ASGI application
+
+#### Local vs Production Database
+I kept separate database setups for development and deployment:
+
+- **Local development:** SQLite
+- **Production deployment:** Render PostgreSQL
+
+This means changes made on the live deployed application do not affect my local SQLite database unless I intentionally connect my local environment to the production database.
+
+#### Database Switching Logic
+The project is configured so that:
+
+- if `DATABASE_URL` is available, Django uses PostgreSQL
+- if `DATABASE_URL` is not set, Django falls back to SQLite
+
+This made local development simple while still allowing a more realistic hosted deployment.
+
+#### Production Environment Variables
+The production deployment uses environment variables set on Render, including:
+
+- `SECRET_KEY`
+- `DEBUG`
+- `DATABASE_URL`
+- `LLM_API_KEY`
+- `LLM_API_URL`
+- `LLM_MODEL`
+
+#### Build Process
+The Render deployment uses a build script that:
+
+1. installs dependencies
+2. collects static files
+3. runs migrations
+
+This keeps the deployment process simple and repeatable.
+
+
+###  Database and SQL Dump
 
 This project uses SQLite for local development.
 
@@ -229,7 +282,7 @@ The dump contains:
 - Employee assignments  
 - Status history  
 
-The SQL dump is included to meet the test requirement of having a committed database with:
+The SQL dump is included to meet the test requirement of having a committed SQL dump file with:
 - Schema
 - At least five complete sample tasks
 
